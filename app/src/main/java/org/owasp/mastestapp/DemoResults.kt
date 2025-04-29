@@ -20,12 +20,12 @@ class DemoResults(private val testId: String) {
     private val demoResults = mutableListOf<DemoResult>()
 
     fun add(status: Status, message: String) {
-        demoResults.add(DemoResult(status, "[MASTG-TEST-$testId]", message))
+        val testId: String = "[MASTG-TEST-$testId]"
+        Log.d("MASTG-TEST", "$status $testId: $message")
+        demoResults.add(DemoResult(status, testId, message))
     }
 
     fun toJson(): String {
-        val jsonResult = Json.encodeToString(demoResults)
-        Log.d("MASTG-TEST", jsonResult)
-        return jsonResult
+        return Json.encodeToString(demoResults)
     }
 }
