@@ -18,7 +18,7 @@ class MastgTest (private val context: Context){
             // case 2: Demo implements a case which fails a test
             r.add(Status.FAIL, "The app implemented a demo which failed the test." )
 
-            throw Exception("Example exception: Method not implemented.")
+            throw Exception("Something went wrong during the demo.")
         }
         catch (e: Exception){
             // case 3: Demo fails due to an exception.

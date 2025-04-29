@@ -1,5 +1,6 @@
 package org.owasp.mastestapp
 
+import android.util.Log
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 
@@ -23,6 +24,8 @@ class DemoResults(private val testId: String) {
     }
 
     fun toJson(): String {
-        return Json.encodeToString(demoResults)
+        val jsonResult = Json.encodeToString(demoResults)
+        Log.d("MASTG-TEST", jsonResult)
+        return jsonResult
     }
 }
