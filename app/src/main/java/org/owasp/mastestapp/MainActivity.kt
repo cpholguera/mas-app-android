@@ -69,7 +69,7 @@ fun MainScreen() {
                         }
                     }
                 } catch (e: Exception) {
-                    // not a valid set of DemoResult, so print the result without any parsing
+                    // fallback: not an instances of DemoResult, so print the result without any parsing
                     append(r)
                 }
             }
