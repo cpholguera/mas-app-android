@@ -55,8 +55,11 @@ for CLASS_NAME in "${CLASS_NAMES[@]}"; do
 
 done
 
+# Use jadx to extract the AndroidManifest.xml
+jadx --no-src -d "$TEMP_JADX_OUTPUT_DIR" "$TEMP_APK"
+
 # Copy the AndroidManifest.xml to the output directory and rename it
-MANIFEST_FILE="$TEMP_APKTOOL_DIR/AndroidManifest.xml"
+MANIFEST_FILE="$TEMP_JADX_OUTPUT_DIR/resources/AndroidManifest.xml"
 if [ -f "$MANIFEST_FILE" ]; then
     cp "$MANIFEST_FILE" "$OUTPUT_DIR/AndroidManifest_reversed.xml"
     echo "Copied $MANIFEST_FILE to $OUTPUT_DIR/AndroidManifest_reversed.xml"
