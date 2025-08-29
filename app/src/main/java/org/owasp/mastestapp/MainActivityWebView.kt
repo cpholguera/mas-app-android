@@ -3,6 +3,7 @@ package org.owasp.mastestapp
 import android.os.Bundle
 import android.webkit.WebView
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,10 +44,24 @@ fun WebViewScreen() {
     val mastgTestWebViewClass = MastgTestWebView(context)
     var showWebView by remember { mutableStateOf(false) } // Controls whether the WebView is displayed
     var webViewKey by remember { mutableIntStateOf(0) }   // Unique key to force WebView recreation
+    var webViewRef by remember { mutableStateOf<WebView?>(null) } // Holds a reference to the WebView
+
+    // Use BackHandler to intercept the back press when the WebView is visible.
+    if (showWebView) {
+        BackHandler {
+            // Check if the WebView can go back in history.
+            if (webViewRef?.canGoBack() == true) {
+                webViewRef?.goBack()
+            } else {
+                // If no back history exists, hide the WebView.
+                showWebView = false
+            }
+        }
+    }
 
     BaseScreen(
         onStartClick = {
-            showWebView = true // Set to show the WebView
+            showWebView = true // Show the WebView
             webViewKey++       // Increment key to create/recreate WebView
         }
     ) {
@@ -56,6 +71,7 @@ fun WebViewScreen() {
                 AndroidView(
                     factory = {
                         WebView(context).apply {
+                            webViewRef = this // Store a reference to the WebView.
                             mastgTestWebViewClass.mastgTest(this)
                             setBackgroundColor(0)
                         }

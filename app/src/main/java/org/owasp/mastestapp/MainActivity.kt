@@ -15,13 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.text.SpanStyle
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -38,40 +39,57 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+fun UpdateDisplayString(defaultMessage:String, displayString:AnnotatedString, result:String):AnnotatedString {
+    return buildAnnotatedString {
+        append(defaultMessage)
+        try {
+            val jsonArrayFromString = Json.parseToJsonElement(result) as JsonArray
+            val demoResults = jsonArrayFromString.map { Json.decodeFromJsonElement<DemoResult>(it) }
+
+            for (demoResult in demoResults) {
+                val lineColor = when (demoResult.status) {
+                    Status.PASS -> Color.Green
+                    Status.FAIL -> Color(0xFFFF9800)
+                    Status.ERROR -> Color.Red
+                }
+                withStyle(style = SpanStyle(color = lineColor)) {
+                    append("${demoResult.status} ${demoResult.testId}: ${demoResult.message} \n\n")
+                }
+            }
+        } catch (e: Exception) {
+            // not a valid set of DemoResult, so print the result without any parsing
+            append(result)
+        }
+    }
+
+}
+
 @Preview
 @Composable
 fun MainScreen() {
     val defaultMessage = "Click \"Start\" to run the test.\n\n"
-    var displayText by remember { mutableStateOf(buildAnnotatedString { append(defaultMessage) }) }
+    var displayString by remember { mutableStateOf(buildAnnotatedString { append(defaultMessage) }) }
     val context = LocalContext.current
     val mastgTestClass = MastgTest(context)
+    // By default run the test in a separate thread, this ensures that network tests such as those using SSLSocket work properly.
+    // However, some tests which interact with UI elements need to run on the main thread.
+    // You can set shouldRunInMainThread = true in MastgTest.kt for those tests.
+    val runInMainThread = MastgTest::class.members
+        .find { it.name == "shouldRunInMainThread" }
+        ?.call(mastgTestClass) as? Boolean ?: false
 
     BaseScreen(
         onStartClick = {
-
-            // run the demo
-            val r = mastgTestClass.mastgTest()
-
-            displayText = buildAnnotatedString {
-                append(defaultMessage)
-                try {
-                    val jsonArrayFromString = Json.parseToJsonElement(r) as JsonArray
-                    val demoResults = jsonArrayFromString.map { Json.decodeFromJsonElement<DemoResult>(it) }
-
-                    for (demoResult in demoResults) {
-                        val lineColor = when (demoResult.status) {
-                            Status.PASS -> Color.Green
-                            Status.FAIL -> Color(0xFFFF9800)
-                            Status.ERROR -> Color.Red
-                        }
-                        withStyle(style = SpanStyle(color = lineColor)) {
-                            append("${demoResult.status} ${demoResult.testId}: ${demoResult.message} \n\n")
-                        }
+            if (runInMainThread) {
+                val result = mastgTestClass.mastgTest()
+                displayString = UpdateDisplayString(defaultMessage, displayString,result)
+            } else {
+                Thread {
+                    val result = mastgTestClass.mastgTest()
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        displayString = UpdateDisplayString(defaultMessage, displayString,result)
                     }
-                } catch (e: Exception) {
-                    // fallback: not an instances of DemoResult, so print the result without any parsing
-                    append(r)
-                }
+                }.start()
             }
         }
     ) {
@@ -79,7 +97,7 @@ fun MainScreen() {
             modifier = Modifier
                 .padding(16.dp)
                 .testTag(MASTG_TEXT_TAG),
-            text = displayText,
+            text = displayString,
             color = Color.White,
             fontSize = 16.sp,
             fontFamily = FontFamily.Monospace

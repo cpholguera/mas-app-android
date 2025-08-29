@@ -1,6 +1,5 @@
 package org.owasp.mastestapp
 
-import android.util.Log
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 
@@ -20,9 +19,7 @@ class DemoResults(private val testId: String) {
     private val demoResults = mutableListOf<DemoResult>()
 
     fun add(status: Status, message: String) {
-        val testId: String = "[MASTG-TEST-$testId]"
-        Log.d("MASTG-TEST", "$status $testId: $message")
-        demoResults.add(DemoResult(status, testId, message))
+        demoResults.add(DemoResult(status, "[MASTG-TEST-$testId]", message))
     }
 
     fun toJson(): String {

@@ -12,13 +12,13 @@ class MastgTest (private val context: Context){
             val sensitiveString = "Hello from the OWASP MASTG Test app."
             Log.d("MASTG-TEST", sensitiveString)
 
-            // case 1: Demo implements a case which fails a test
-            r.add(Status.FAIL, "The app implemented a demo which failed the test." )
-
-            // case 2: Demo implements a case which passes a test
+            // case 1: Demo implements a case which passes a test
             r.add(Status.PASS, "The app implemented a demo which passed the test with the following value: '$sensitiveString'" )
 
-            throw Exception("Something went wrong during the demo.")
+            // case 2: Demo implements a case which fails a test
+            r.add(Status.FAIL, "The app implemented a demo which failed the test." )
+
+            throw Exception("Example exception: Method not implemented.")
         }
         catch (e: Exception){
             // case 3: Demo fails due to an exception.
