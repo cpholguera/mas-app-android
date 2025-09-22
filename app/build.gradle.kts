@@ -72,4 +72,5 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("org.jetbrains.kotlin:kotlin-reflect:2.0.21")
+    // ADD_LIBS_HERE
 }
