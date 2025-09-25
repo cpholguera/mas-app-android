@@ -12,7 +12,7 @@ enum class Status {
 @Serializable
 data class DemoResult(
     val status: Status,
-    val testId: String,
+    val demoId: String,
     val message: String
 )
 
@@ -20,7 +20,7 @@ class DemoResults(private val demoId: String) {
     private val demoResults = mutableListOf<DemoResult>()
 
     fun add(status: Status, message: String) {
-        demoResults.add(DemoResult(status, "[MASTG-DEMO-$demoId]", message))
+        demoResults.add(DemoResult(status, demoId, message))
         when (status) {
             Status.PASS -> {
                 Log.i("MASTG-DEMO", "MASTG-DEMO-$demoId demonstrated a successful test: $message")

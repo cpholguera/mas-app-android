@@ -39,7 +39,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-fun UpdateDisplayString(defaultMessage:String, displayString:AnnotatedString, result:String):AnnotatedString {
+fun UpdateDisplayString(
+    defaultMessage: String,
+    displayString: AnnotatedString,
+    result: String
+): AnnotatedString {
     return buildAnnotatedString {
         append(defaultMessage)
         try {
@@ -47,13 +51,22 @@ fun UpdateDisplayString(defaultMessage:String, displayString:AnnotatedString, re
             val demoResults = jsonArrayFromString.map { Json.decodeFromJsonElement<DemoResult>(it) }
 
             for (demoResult in demoResults) {
-                val lineColor = when (demoResult.status) {
-                    Status.PASS -> Color.Green
-                    Status.FAIL -> Color(0xFFFF9800)
-                    Status.ERROR -> Color.Red
-                }
-                withStyle(style = SpanStyle(color = lineColor)) {
-                    append("${demoResult.status} ${demoResult.testId}: ${demoResult.message} \n\n")
+                when (demoResult.status) {
+                    Status.PASS -> {
+                        withStyle(style = SpanStyle(color = Color.Green)) {
+                            append("MASTG-DEMO-${demoResult.demoId} demonstrated a successful test:\n${demoResult.message}\n\n")
+                        }
+                    }
+                    Status.FAIL -> {
+                        withStyle(style = SpanStyle(color = Color(0xFFFF9800))) {
+                            append("MASTG-DEMO-${demoResult.demoId} demonstrated a failed test:\n${demoResult.message}\n\n")
+                        }
+                    }
+                    Status.ERROR -> {
+                        withStyle(style = SpanStyle(color = Color.Red)) {
+                            append("MASTG-DEMO-${demoResult.demoId} failed:\n${demoResult.message}\n\n")
+                        }
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -82,12 +95,12 @@ fun MainScreen() {
         onStartClick = {
             if (runInMainThread) {
                 val result = mastgTestClass.mastgTest()
-                displayString = UpdateDisplayString(defaultMessage, displayString,result)
+                displayString = UpdateDisplayString(defaultMessage, displayString, result)
             } else {
                 Thread {
                     val result = mastgTestClass.mastgTest()
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        displayString = UpdateDisplayString(defaultMessage, displayString,result)
+                        displayString = UpdateDisplayString(defaultMessage, displayString, result)
                     }
                 }.start()
             }
