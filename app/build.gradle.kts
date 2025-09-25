@@ -74,4 +74,5 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("org.jetbrains.kotlin:kotlin-reflect:2.0.21")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+    // ADD_LIBS_HERE
 }
