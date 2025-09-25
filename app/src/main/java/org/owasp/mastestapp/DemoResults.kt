@@ -1,5 +1,6 @@
 package org.owasp.mastestapp
 
+import android.util.Log
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 
@@ -15,11 +16,22 @@ data class DemoResult(
     val message: String
 )
 
-class DemoResults(private val testId: String) {
+class DemoResults(private val demoId: String) {
     private val demoResults = mutableListOf<DemoResult>()
 
     fun add(status: Status, message: String) {
-        demoResults.add(DemoResult(status, "[MASTG-TEST-$testId]", message))
+        demoResults.add(DemoResult(status, "[MASTG-DEMO-$demoId]", message))
+        when (status) {
+            Status.PASS -> {
+                Log.i("MASTG-DEMO", "MASTG-DEMO-$demoId demonstrated a successful test: $message")
+            }
+            Status.FAIL -> {
+                Log.i("MASTG-DEMO", "MASTG-DEMO-$demoId demonstrated a failed test: $message")
+            }
+            Status.ERROR -> {
+                Log.e("MASTG-DEMO", "MASTG-DEMO-$demoId failed: $message")
+            }
+        }
     }
 
     fun toJson(): String {
