@@ -28,7 +28,7 @@ class MainInstrumentedTests {
         with(composeRule) {
             setContent { MainScreen() }
             val textNode = onNodeWithTag(MASTG_TEXT_TAG)
-            textNode.assertTextEquals("Click \"Start\" to run the test.")
+            textNode.assertTextEquals("Click \"Start\" to run the test.\n\n")
                     .assertIsDisplayed()
 
             onNodeWithText("Start").performClick()
