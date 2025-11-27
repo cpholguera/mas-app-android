@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     kotlin("plugin.serialization") version "2.1.20"
+    // ADD_PLUGINS_HERE
 }
 
 android {
@@ -53,6 +54,8 @@ android {
         }
     }
 }
+
+// ADD_SECTIONS_HERE
 
 dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
