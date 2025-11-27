@@ -31,6 +31,18 @@ git clone https://github.com/cpholguera/MASTestApp-Android.git
 - If applicable, modify the `AndroidManifest.xml` to add necessary permissions or components.
 - Build the app and **test it** on the Android emulator or a physical device
 
+### Customize Build Configuration (Optional)
+
+Demos may include additional files to customize the `build.gradle.kts` configuration. The automation will merge these into the mas-app-android `app/build.gradle.kts` file:
+
+- **`build.gradle.kts.libs`**: Add dependencies to the `dependencies` block. The content will be inserted at the `// ADD_LIBS_HERE` placeholder.
+- **`build.gradle.kts.plugins`**: Add plugins to the `plugins` block. The content will be inserted at the `// ADD_PLUGINS_HERE` placeholder.
+- **`build.gradle.kts.sections`**: Add custom sections (e.g., `protobuf {}` configuration). The content will be inserted at the `// ADD_SECTIONS_HERE` placeholder.
+
+### Include Proto Files (Optional)
+
+If your demo requires Protocol Buffer files, include `.proto` files in your demo folder. The automation will copy them to `app/src/main/proto/*.proto`.
+
 ### Run the Extraction Script
 
 Install **jadx** and **apktool** and ensure they're available in your path.
@@ -71,7 +83,11 @@ owasp-mastg/demos/MASTG-DEMO-XXXX/
 ├── AndroidManifest_reversed.xml
 ├── MASTG-DEMO-XXXX.md
 ├── output.txt
-└── run.sh
+├── run.sh
+├── build.gradle.kts.libs      # (optional) dependencies to add
+├── build.gradle.kts.plugins   # (optional) plugins to add
+├── build.gradle.kts.sections  # (optional) custom sections to add
+└── *.proto                    # (optional) Protocol Buffer files
 ```
 
 Finalize your demo by adding a `MASTG-DEMO-XXXX.md` file, tweaking the `run.sh` script, and adding the relevant output files.
