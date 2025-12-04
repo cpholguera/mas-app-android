@@ -1,5 +1,7 @@
 #!/bin/bash
 
+pushd "$(dirname "$0")/.." > /dev/null || exit
+
 CLASS_NAMES=("org.owasp.mastestapp.MastgTest" "org.owasp.mastestapp.MastgTestWebView" "org.owasp.mastestapp.MainActivityKt")
 OUTPUT_DIR="output"
 TEMP_APKTOOL_DIR="$OUTPUT_DIR/temp_apktool_output"
@@ -27,7 +29,7 @@ APK_PATH=$(adb shell pm path org.owasp.mastestapp | sed 's/package://')
 adb pull "$APK_PATH" "$TEMP_APK"
 
 # Use apktool to extract the AndroidManifest.xml
-apktool d -s -f -o "$TEMP_APKTOOL_DIR" "$TEMP_APK"
+apktool d -s -f -p "$TEMP_APKTOOL_DIR/cache" -o "$TEMP_APKTOOL_DIR" "$TEMP_APK"
 
 for CLASS_NAME in "${CLASS_NAMES[@]}"; do
 
@@ -72,3 +74,5 @@ cp app/src/main/AndroidManifest.xml "$OUTPUT_DIR/AndroidManifest.xml"
 
 # Clean up temporary files
 rm -rf "$TEMP_JADX_OUTPUT_DIR" "$TEMP_APKTOOL_DIR"
+
+popd > /dev/null || exit
