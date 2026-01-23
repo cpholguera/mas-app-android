@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CLASS_NAMES=("org.owasp.mastestapp.MastgTest" "org.owasp.mastestapp.MastgTestWebView" "org.owasp.mastestapp.MainActivityKt")
+CLASS_NAMES=("org.owasp.mastestapp.MastgTest" "org.owasp.mastestapp.MastgTestWebView" "org.owasp.mastestapp.MainActivity" "org.owasp.mastestapp.MainActivityKt" "org.owasp.mastestapp.ComposableSingletons\$MainActivityKt")
 OUTPUT_DIR="output"
 TEMP_APKTOOL_DIR="$OUTPUT_DIR/temp_apktool_output"
 TEMP_APK="$OUTPUT_DIR/temp_base.apk"
@@ -49,6 +49,10 @@ for CLASS_NAME in "${CLASS_NAMES[@]}"; do
     # We must rename the MainActivityKt to MainActivity because the class is named MainActivityKt in the decompiled code
     if [ "$SIMPLE_CLASS_NAME" == "MainActivityKt" ]; then
         SIMPLE_CLASS_NAME="MainActivity"
+    fi
+
+    if [ "$SIMPLE_CLASS_NAME" == "ComposableSingletons\$MainActivityKt" ]; then
+        SIMPLE_CLASS_NAME="ComposableSingletons\$MainActivity"
     fi
 
     cp app/src/main/java/org/owasp/mastestapp/${SIMPLE_CLASS_NAME}.kt "$OUTPUT_DIR/${SIMPLE_CLASS_NAME}.kt"
