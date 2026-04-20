@@ -69,6 +69,7 @@ W_STRINGS="$WORK/app/src/main/res/values/strings.xml"
 W_MANIFEST="$WORK/app/src/main/AndroidManifest.xml"
 W_XML="$WORK/app/src/main/res/xml"
 W_JAVA="$WORK/app/src/main/java/$(echo "$BASE_PKG" | tr '.' '/')"
+W_DRAWABLE="$WORK/app/src/main/res/drawable"
 
 # ── package rename ──────────────────────────────────────────────────────────
 if [[ "$PACKAGE" != "$BASE_PKG" ]]; then
@@ -119,6 +120,18 @@ overlay "$DEMO_DIR/filepaths.xml"                "$W_XML/filepaths.xml"
 overlay "$DEMO_DIR/network_security_config.xml"  "$W_XML/network_security_config.xml"
 overlay "$DEMO_DIR/backup_rules.xml"             "$W_XML/backup_rules.xml"
 overlay "$DEMO_DIR/data_extraction_rules.xml"    "$W_XML/data_extraction_rules.xml"
+
+# app icon ── icon.png (optional)
+# Drop one PNG in the demo folder. The base app's mipmap-anydpi-v26/ic_launcher*.xml
+# already references @drawable/ic_launcher_icon_fg with an 18dp safe-zone inset.
+# The script just swaps that drawable to the supplied PNG; no XML writing needed.
+# minSdk 29 guarantees the anydpi adaptive icon always wins over density buckets.
+if [[ -f "$DEMO_DIR/icon.png" ]]; then
+  info "Using icon.png for launcher icon"
+  mkdir -p "$W_DRAWABLE"
+  rm -f "$W_DRAWABLE/ic_launcher_icon_fg.xml"
+  cp -f "$DEMO_DIR/icon.png" "$W_DRAWABLE/ic_launcher_icon_fg.png"
+fi
 
 # .proto files
 shopt -s nullglob
