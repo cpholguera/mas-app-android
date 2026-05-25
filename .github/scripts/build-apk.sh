@@ -34,7 +34,13 @@ mkdir -p "$OUTPUT_DIR"
 OUTPUT_DIR="$(cd "$OUTPUT_DIR" && pwd)"
 
 # ── read config ─────────────────────────────────────────────────────────────
-cfg_get() {                        # $1=key  $2=default
+# `cfg_get()` function arguments:
+# - `$1=key`: the first argument is a configuration key to look up (e.g., "package", "app-name")
+# - `$2=default`: the second argument is a default value to return if the key isn't found
+# So when you call `cfg_get "package" "$BASE_PKG"`, it reads the YAML config file for the line 
+# starting with `package:`, and if not found, returns `$BASE_PKG` instead.
+
+cfg_get() {
   local val=""
   if [[ -f "$DEMO_DIR/config.yml" ]]; then
     val=$(grep -E "^${1}:" "$DEMO_DIR/config.yml" 2>/dev/null | head -1 \
