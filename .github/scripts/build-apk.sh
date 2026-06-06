@@ -110,10 +110,15 @@ overlay() {
   [[ -f "$1" ]] || return 0
   mkdir -p "$(dirname "$2")"
   cp -f "$1" "$2"
-  if [[ "$PACKAGE" != "$BASE_PKG" && "$1" == *.kt ]]; then
-    sed -i.bak -e "s|package $BASE_PKG|package $PACKAGE|g" \
-               -e "s|import $BASE_PKG|import $PACKAGE|g" "$2"
-    rm -f "$2.bak"
+  if [[ "$PACKAGE" != "$BASE_PKG" ]]; then
+    if [[ "$1" == *.kt ]]; then
+      sed -i.bak -e "s|package $BASE_PKG|package $PACKAGE|g" \
+                 -e "s|import $BASE_PKG|import $PACKAGE|g" "$2"
+      rm -f "$2.bak"
+    elif [[ "$1" == *.pro ]]; then
+      sed -i.bak "s|${BASE_PKG}|${PACKAGE}|g" "$2"
+      rm -f "$2.bak"
+    fi
   fi
   info "Copied $(basename "$1")"
 }
@@ -126,6 +131,7 @@ overlay "$DEMO_DIR/filepaths.xml"                "$W_XML/filepaths.xml"
 overlay "$DEMO_DIR/network_security_config.xml"  "$W_XML/network_security_config.xml"
 overlay "$DEMO_DIR/backup_rules.xml"             "$W_XML/backup_rules.xml"
 overlay "$DEMO_DIR/data_extraction_rules.xml"    "$W_XML/data_extraction_rules.xml"
+overlay "$DEMO_DIR/proguard-rules.pro"           "$WORK/app/proguard-rules.pro"
 
 # app icon ── icon.png (optional)
 # Drop one PNG in the demo folder. The base app's mipmap-anydpi-v26/ic_launcher*.xml
@@ -149,12 +155,21 @@ done
 shopt -u nullglob
 
 # build.gradle.kts fragments
-for kind in plugins sections libs; do
+for kind in plugins sections libs build; do
   frag="$DEMO_DIR/build.gradle.kts.$kind"
   [[ -f "$frag" ]] || continue
   marker="// ADD_$(echo "$kind" | tr '[:lower:]' '[:upper:]')_HERE"
-  awk -v m="$marker" -v c="$(cat "$frag")" '$0 ~ m {print c; next} {print}' \
-    "$W_GRADLE" > "$W_GRADLE.tmp" && mv "$W_GRADLE.tmp" "$W_GRADLE"
+  # Use getline to read fragment file directly — avoids BSD awk's ban on
+  # newlines inside -v variable assignments (multiline fragments would silently
+  # disappear with the -v approach on macOS).
+  awk -v m="$marker" -v f="$frag" '
+    $0 ~ m {
+      while ((getline line < f) > 0) print line
+      close(f)
+      next
+    }
+    { print }
+  ' "$W_GRADLE" > "$W_GRADLE.tmp" && mv "$W_GRADLE.tmp" "$W_GRADLE"
   info "Inserted build.gradle.kts.$kind"
 done
 
