@@ -103,7 +103,7 @@ info "App name : $APP_NAME"
 
 # ── disposable working copy (repo is never touched) ────────────────────────
 TMP_DIR=$(mktemp -d)
-trap 'rm -rf "$TMP_PKG"' EXIT
+trap 'rm -rf "$TMP_DIR"' EXIT
 WORK_DIR="$TMP_DIR/work"
 mkdir -p "$WORK_DIR"
 
