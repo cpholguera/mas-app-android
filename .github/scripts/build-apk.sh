@@ -23,30 +23,30 @@ done
 
 [[ -n "$DEMO_DIR" ]] || die "Usage: $0 <demo-folder> [--output <dir>]"
 [[ -d "$DEMO_DIR" ]] || die "Demo directory not found: $DEMO_DIR"
-DEMO_DIR="$(cd "$DEMO_DIR" && pwd)"
+DEMO_DIR="$(realpath "$DEMO_DIR")"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 [[ -f "$APP_ROOT/gradlew" ]] || die "Cannot find gradlew in $APP_ROOT"
 
 OUTPUT_DIR="${OUTPUT_DIR:-$PWD}"
+OUTPUT_DIR="$(realpath "$OUTPUT_DIR")"
 mkdir -p "$OUTPUT_DIR"
-OUTPUT_DIR="$(cd "$OUTPUT_DIR" && pwd)"
 
 # ── read config ─────────────────────────────────────────────────────────────
-# `cfg_get()` function arguments:
-# - `$1=key`: the first argument is a configuration key to look up (e.g., "package", "app-name")
-# - `$2=default`: the second argument is a default value to return if the key isn't found
-# So when you call `cfg_get "package" "$BASE_PKG"`, it reads the YAML config file for the line 
+# `cfg_get()`:
+# When you call `cfg_get "package" "$BASE_PKG"`, it reads the YAML config file for the line 
 # starting with `package:`, and if not found, returns `$BASE_PKG` instead.
 
 cfg_get() {
+  local config_key="$1"
+  local default_value="$2"
   local val=""
   if [[ -f "$DEMO_DIR/config.yml" ]]; then
-    val=$(grep -E "^${1}:" "$DEMO_DIR/config.yml" 2>/dev/null | head -1 \
-      | sed "s/^${1}:[[:space:]]*//" | sed 's/[[:space:]]*$//' || true)
+      val=$(grep -E "^${config_key}:" "$DEMO_DIR/config.yml" 2>/dev/null | head -1 \
+        | sed "s/^${config_key}:[[:space:]]*//" | sed 's/[[:space:]]*$//' || true)
   fi
-  echo "${val:-$2}"
+  echo "${val:-${default_value}}"
 }
 
 BASE_PKG=$(grep -oE 'namespace\s*=\s*"[^"]+"' "$APP_ROOT/app/build.gradle.kts" \
@@ -81,9 +81,8 @@ W_DRAWABLE="$WORK/app/src/main/res/drawable"
 if [[ "$PACKAGE" != "$BASE_PKG" ]]; then
   NEW_JAVA="$WORK/app/src/main/java/$(echo "$PACKAGE" | tr '.' '/')"
   info "Rewriting package → $PACKAGE"
-  sed -i.bak -e "s|namespace = \"$BASE_PKG\"|namespace = \"$PACKAGE\"|" \
-             -e "s|applicationId = \"$BASE_PKG\"|applicationId = \"$PACKAGE\"|" "$W_GRADLE"
-  rm -f "$W_GRADLE.bak"
+  sed -i'' -e "s|namespace = \"$BASE_PKG\"|namespace = \"$PACKAGE\"|" \
+            -e "s|applicationId = \"$BASE_PKG\"|applicationId = \"$PACKAGE\"|" "$W_GRADLE"
   # Copy via external temp to avoid recursion when NEW_JAVA is inside W_JAVA
   TMP_PKG=$(mktemp -d)
   cp -a "$W_JAVA/." "$TMP_PKG/"
@@ -101,26 +100,25 @@ fi
 # ── app-name override ──────────────────────────────────────────────────────
 if [[ "$APP_NAME" != "$BASE_NAME" ]]; then
   info "Setting app name → $APP_NAME"
-  sed -i.bak "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">$APP_NAME</string>|" "$W_STRINGS"
-  rm -f "$W_STRINGS.bak"
+  sed -i'' "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">$APP_NAME</string>|" "$W_STRINGS"
 fi
 
 # ── overlay demo files ──────────────────────────────────────────────────────
 overlay() {
-  [[ -f "$1" ]] || return 0
-  mkdir -p "$(dirname "$2")"
-  cp -f "$1" "$2"
+  local source="$1"
+  local destination="$2"
+  [[ -f "${source}" ]] || return 0
+  mkdir -p "$(dirname "${destination}")"
+  cp -f "${source}" "${destination}"
   if [[ "$PACKAGE" != "$BASE_PKG" ]]; then
-    if [[ "$1" == *.kt ]]; then
-      sed -i.bak -e "s|package $BASE_PKG|package $PACKAGE|g" \
-                 -e "s|import $BASE_PKG|import $PACKAGE|g" "$2"
-      rm -f "$2.bak"
-    elif [[ "$1" == *.pro ]]; then
-      sed -i.bak "s|${BASE_PKG}|${PACKAGE}|g" "$2"
-      rm -f "$2.bak"
+    if [[ "${source}" == *.kt ]]; then
+      sed -i'' -e "s|package $BASE_PKG|package $PACKAGE|g" \
+                 -e "s|import $BASE_PKG|import $PACKAGE|g" "${destination}"
+    elif [[ "${source}" == *.pro ]]; then
+      sed -i'' "s|${BASE_PKG}|${PACKAGE}|g" "${destination}"
     fi
   fi
-  info "Copied $(basename "$1")"
+  info "Overlayed $(basename "$1")"
 }
 
 overlay "$DEMO_DIR/MastgTest.kt"               "$W_JAVA/MastgTest.kt"
@@ -184,5 +182,5 @@ APK="$WORK/app/build/outputs/apk/debug/app-debug.apk"
 [[ -f "$APK" ]] || die "APK not found"
 
 OUTPUT_APK="$OUTPUT_DIR/${APP_NAME}.apk"
-cp "$APK" "$OUTPUT_APK"
+cp -f "$APK" "$OUTPUT_APK"
 info "APK ready → $OUTPUT_APK"
