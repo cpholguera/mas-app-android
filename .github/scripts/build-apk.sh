@@ -96,27 +96,29 @@ info "Package  : $PACKAGE"
 info "App name : $APP_NAME"
 
 # ── disposable working copy (repo is never touched) ────────────────────────
-WORK=$(mktemp -d)
-trap 'rm -rf "$WORK"' EXIT
+TMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TMP_PKG"' EXIT
+WORK_DIR="$TMP_DIR/work"
+mkdir -p "$WORK_DIR"
 
 rsync -a --exclude='.git' --exclude='build' --exclude='*.apk' \
-  --exclude='.gradle' --exclude='tests' "$APP_ROOT/" "$WORK/"
+  --exclude='.gradle' --exclude='tests' "$APP_ROOT/" "$WORK_DIR/"
 
-W_GRADLE="$WORK/app/build.gradle.kts"
-W_STRINGS="$WORK/app/src/main/res/values/strings.xml"
-W_MANIFEST="$WORK/app/src/main/AndroidManifest.xml"
-W_XML="$WORK/app/src/main/res/xml"
-W_JAVA="$WORK/app/src/main/java/$(echo "$BASE_PKG" | tr '.' '/')"
-W_DRAWABLE="$WORK/app/src/main/res/drawable"
+W_GRADLE="$WORK_DIR/app/build.gradle.kts"
+W_STRINGS="$WORK_DIR/app/src/main/res/values/strings.xml"
+W_MANIFEST="$WORK_DIR/app/src/main/AndroidManifest.xml"
+W_XML="$WORK_DIR/app/src/main/res/xml"
+W_JAVA="$WORK_DIR/app/src/main/java/$(echo "$BASE_PKG" | tr '.' '/')"
+W_DRAWABLE="$WORK_DIR/app/src/main/res/drawable"
 
 # ── package rename ──────────────────────────────────────────────────────────
 if [[ "$PACKAGE" != "$BASE_PKG" ]]; then
-  NEW_JAVA="$WORK/app/src/main/java/$(echo "$PACKAGE" | tr '.' '/')"
+  NEW_JAVA="$WORK_DIR/app/src/main/java/$(echo "$PACKAGE" | tr '.' '/')"
   info "Rewriting package → $PACKAGE"
   sed -i'' -e "s|namespace = \"$BASE_PKG\"|namespace = \"$PACKAGE\"|" \
             -e "s|applicationId = \"$BASE_PKG\"|applicationId = \"$PACKAGE\"|" "$W_GRADLE"
   # Copy via external temp to avoid recursion when NEW_JAVA is inside W_JAVA
-  TMP_PKG=$(mktemp -d)
+  TMP_PKG=$(TMPDIR="$TMP_DIR" mktemp -d)
   cp -a "$W_JAVA/." "$TMP_PKG/"
   rm -rf "$W_JAVA"
   mkdir -p "$NEW_JAVA"
@@ -161,7 +163,7 @@ overlay "$DEMO_DIR/filepaths.xml"                "$W_XML/filepaths.xml"
 overlay "$DEMO_DIR/network_security_config.xml"  "$W_XML/network_security_config.xml"
 overlay "$DEMO_DIR/backup_rules.xml"             "$W_XML/backup_rules.xml"
 overlay "$DEMO_DIR/data_extraction_rules.xml"    "$W_XML/data_extraction_rules.xml"
-overlay "$DEMO_DIR/proguard-rules.pro"           "$WORK/app/proguard-rules.pro"
+overlay "$DEMO_DIR/proguard-rules.pro"           "$WORK_DIR/app/proguard-rules.pro"
 
 # app icon ── icon.png (optional)
 # Drop one PNG in the demo folder. The base app's mipmap-anydpi-v26/ic_launcher*.xml
@@ -178,8 +180,8 @@ fi
 # .proto files
 shopt -s nullglob
 for pf in "$DEMO_DIR"/*.proto; do
-  mkdir -p "$WORK/app/src/main/proto"
-  cp -f "$pf" "$WORK/app/src/main/proto/"
+  mkdir -p "$WORK_DIR/app/src/main/proto"
+  cp -f "$pf" "$WORK_DIR/app/src/main/proto/"
   info "Copied $(basename "$pf")"
 done
 shopt -u nullglob
@@ -205,12 +207,12 @@ done
 
 # ── build ────────────────────────────────────────────────────────────────────
 info "Building APK…"
-cd "$WORK"
+cd "$WORK_DIR"
 grep -q 'org.gradle.caching=true' gradle.properties 2>/dev/null || \
   printf '\norg.gradle.caching=true\norg.gradle.configuration-cache=true\n' >> gradle.properties
 ./gradlew assembleDebug --stacktrace
 
-APK="$WORK/app/build/outputs/apk/debug/app-debug.apk"
+APK="$WORK_DIR/app/build/outputs/apk/debug/app-debug.apk"
 [[ -f "$APK" ]] || die "APK not found"
 
 OUTPUT_APK="$OUTPUT_DIR/${APP_NAME}.apk"
