@@ -1,27 +1,59 @@
 #!/usr/bin/env bash
-# build-apk.sh — Build a customised APK from a demo folder.
-#
-# Usage:
-#   .github/scripts/build-apk.sh <demo-folder> [--output <dir>]
-#
-# The original repo is NEVER modified — all work happens in a temp copy.
 
 set -euo pipefail
 
-die()  { echo "ERROR: $*" >&2; exit 1; }
-info() { echo "• $*"; }
+usage() {
+  cat >&2 <<EOF
+Usage:
+  $0 <demo-folder> [--output <dir>]
+
+Builds a customised debug APK from a demo folder without modifying the repo.
+
+Arguments:
+  <demo-folder>       Demo folder containing optional override files.
+
+Options:
+  --output <dir>      Directory where the APK will be written.
+  -h, --help          Show this help message.
+
+Supported demo files:
+  config.yml
+  MastgTest.kt
+  MainActivity.kt
+  MastgTestWebView.kt
+  AndroidManifest.xml
+  filepaths.xml
+  network_security_config.xml
+  backup_rules.xml
+  data_extraction_rules.xml
+  proguard-rules.pro
+  icon.png
+  *.proto
+  build.gradle.kts.plugins
+  build.gradle.kts.sections
+  build.gradle.kts.libs
+  build.gradle.kts.build
+
+config.yml keys:
+  package:            Override application package.
+  app-name:           Override launcher app name.
+EOF
+}
+die()   { usage; echo "ERROR: $*" >&2; exit 1; }
+info()  { echo "• $*"; }
 
 # ── parse arguments ─────────────────────────────────────────────────────────
 DEMO_DIR="" OUTPUT_DIR=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --output) OUTPUT_DIR="$2"; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    --output) [[ $# -ge 2 ]] || die "Missing value for --output"; OUTPUT_DIR="$2"; shift 2 ;;
     -*)       die "Unknown option: $1" ;;
     *)        DEMO_DIR="$1"; shift ;;
   esac
 done
 
-[[ -n "$DEMO_DIR" ]] || die "Usage: $0 <demo-folder> [--output <dir>]"
+[[ -n "$DEMO_DIR" ]] || die "Missing demo folder"
 [[ -d "$DEMO_DIR" ]] || die "Demo directory not found: $DEMO_DIR"
 DEMO_DIR="$(realpath "$DEMO_DIR")"
 
