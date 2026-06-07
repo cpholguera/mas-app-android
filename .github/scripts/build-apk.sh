@@ -169,6 +169,7 @@ overlay "$DEMO_DIR/network_security_config.xml"  "$W_XML/network_security_config
 overlay "$DEMO_DIR/backup_rules.xml"             "$W_XML/backup_rules.xml"
 overlay "$DEMO_DIR/data_extraction_rules.xml"    "$W_XML/data_extraction_rules.xml"
 overlay "$DEMO_DIR/proguard-rules.pro"           "$WORK_DIR/app/proguard-rules.pro"
+overlay "$DEMO_DIR/obfuscationdictionary.txt"    "$WORK_DIR/app/obfuscationdictionary.txt"
 
 # app icon ── icon.png (optional)
 # Drop one PNG in the demo folder. The base app's mipmap-anydpi-v26/ic_launcher*.xml
