@@ -42,10 +42,10 @@ EOF
 die()   { usage; echo "ERROR: $*" >&2; exit 1; }
 info()  { echo "• $*"; }
 
-if sed --version >/dev/null 2>&1; then
-  SED_INPLACE=(sed -i)
+if sed --version &>/dev/null; then
+  SED_CMD=(sed -i)
 else
-  SED_INPLACE=(sed -i '')
+  SED_CMD=(sed -i '')
 fi
 
 # ── parse arguments ─────────────────────────────────────────────────────────
@@ -121,7 +121,7 @@ W_DRAWABLE="$WORK_DIR/app/src/main/res/drawable"
 if [[ "$PACKAGE" != "$BASE_PKG" ]]; then
   NEW_JAVA="$WORK_DIR/app/src/main/java/$(echo "$PACKAGE" | tr '.' '/')"
   info "Rewriting package → $PACKAGE"
-  "${SED_INPLACE[@]}" -e "s|namespace = \"$BASE_PKG\"|namespace = \"$PACKAGE\"|" \
+  "${SED_CMD[@]}" -e "s|namespace = \"$BASE_PKG\"|namespace = \"$PACKAGE\"|" \
             -e "s|applicationId = \"$BASE_PKG\"|applicationId = \"$PACKAGE\"|" "$W_GRADLE"
   # Copy via external temp to avoid recursion when NEW_JAVA is inside W_JAVA
   TMP_PKG=$(TMPDIR="$TMP_DIR" mktemp -d)
@@ -130,7 +130,7 @@ if [[ "$PACKAGE" != "$BASE_PKG" ]]; then
   mkdir -p "$NEW_JAVA"
   cp -a "$TMP_PKG/." "$NEW_JAVA/"
   rm -rf "$TMP_PKG"
-  find "$NEW_JAVA" -name '*.kt' -exec "${SED_INPLACE[@]}" \
+  find "$NEW_JAVA" -name '*.kt' -exec "${SED_CMD[@]}" \
     -e "s|package $BASE_PKG|package $PACKAGE|g" \
     -e "s|import $BASE_PKG|import $PACKAGE|g" {} +
   W_JAVA="$NEW_JAVA"
@@ -139,7 +139,7 @@ fi
 # ── app-name override ──────────────────────────────────────────────────────
 if [[ "$APP_NAME" != "$BASE_NAME" ]]; then
   info "Setting app name → $APP_NAME"
-  "${SED_INPLACE[@]}" "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">$APP_NAME</string>|" "$W_STRINGS"
+  "${SED_CMD[@]}" "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">$APP_NAME</string>|" "$W_STRINGS"
 fi
 
 # ── overlay demo files ──────────────────────────────────────────────────────
@@ -151,10 +151,10 @@ overlay() {
   cp -f "${source}" "${destination}"
   if [[ "$PACKAGE" != "$BASE_PKG" ]]; then
     if [[ "${source}" == *.kt ]]; then
-      "${SED_INPLACE[@]}" -e "s|package $BASE_PKG|package $PACKAGE|g" \
+      "${SED_CMD[@]}" -e "s|package $BASE_PKG|package $PACKAGE|g" \
                  -e "s|import $BASE_PKG|import $PACKAGE|g" "${destination}"
     elif [[ "${source}" == *.pro ]]; then
-      "${SED_INPLACE[@]}" "s|${BASE_PKG}|${PACKAGE}|g" "${destination}"
+      "${SED_CMD[@]}" "s|${BASE_PKG}|${PACKAGE}|g" "${destination}"
     fi
   fi
   info "Overlayed $(basename "$1")"
