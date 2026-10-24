@@ -30,6 +30,7 @@ android {
                 "proguard-rules.pro"
             )
         }
+        // ADD_BUILD_HERE
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

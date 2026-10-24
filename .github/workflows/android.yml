@@ -26,7 +26,13 @@ jobs:
     - name: Run Unit Tests
       run: |
         ./gradlew test
-        mastgTestOutput=$(grep -oP '(?<=<pre>MastgTestOutput: ).*' app/build/reports/tests/testDebugUnitTest/classes/org.owasp.mastestapp.RunMastgTest.html)
+        report_file=$(find app/build/reports/tests/testDebugUnitTest -type f -name 'RunMastgTest.html' -print -quit 2>/dev/null || true)
+        mastgTestOutput=""
+        if [[ -n "$report_file" ]]; then
+          mastgTestOutput=$(grep -oP '(?<=<pre>MastgTestOutput: ).*' "$report_file" || true)
+        else
+          echo "RunMastgTest HTML report not found; continuing without test output."
+        fi
         echo "Test output: $mastgTestOutput"
         echo "MASTG_TEST_OUTPUT=$mastgTestOutput" >> $GITHUB_OUTPUT
         echo "MASTG_TEST_OUTPUT=$mastgTestOutput" >> $GITHUB_ENV
@@ -36,4 +42,3 @@ jobs:
 
     - name: Build release version
       run: ./gradlew assembleRelease
-
