@@ -1,0 +1,104 @@
+name: Build Demo APKs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'tests/demos/**'
+      - '.github/scripts/build-apk.sh'
+      - '.github/workflows/build-demos.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'tests/demos/**'
+      - '.github/scripts/build-apk.sh'
+      - '.github/workflows/build-demos.yml'
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Generate matrix
+        id: set-matrix
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            changed_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD -- 'tests/demos/')
+
+            echo "Changed files:"
+            echo "$changed_files"
+
+            # Extract unique demo directories (one level under tests/demos/)
+            demos=$(echo "$changed_files" | grep -oE 'tests/demos/[^/]+' | sort -u | tr '\n' ' ')
+
+            if [ -z "$demos" ]; then
+              echo "matrix={\"demo\":[]}" >> $GITHUB_OUTPUT
+            else
+              json_array=$(echo "$demos" | xargs -n1 | sed 's/.*/"&"/' | paste -sd, -)
+              echo "matrix={\"demo\":[$json_array]}" >> $GITHUB_OUTPUT
+            fi
+          else
+            # Include all demos for main branch and workflow_dispatch
+            demos=$(find tests/demos -mindepth 1 -maxdepth 1 -type d | sort | tr '\n' ' ')
+
+            if [ -z "$demos" ]; then
+              echo "matrix={\"demo\":[]}" >> $GITHUB_OUTPUT
+            else
+              json_array=$(echo "$demos" | xargs -n1 | sed 's/.*/"&"/' | paste -sd, -)
+              echo "matrix={\"demo\":[$json_array]}" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Print matrix
+        run: echo "${{ steps.set-matrix.outputs.matrix }}"
+
+  build:
+    needs: generate-matrix
+    if: ${{ needs.generate-matrix.outputs.matrix != '{"demo":[]}' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    strategy:
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+      fail-fast: false
+      max-parallel: 3
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build APK for ${{ matrix.demo }}
+        run: |
+          .github/scripts/build-apk.sh "${{ matrix.demo }}"
+
+      - name: Determine artifact name
+        id: artifact
+        run: |
+          demo="${{ matrix.demo }}"
+          # Replace slashes with dashes for artifact naming
+          artifact_name="${demo//\//-}"
+          echo "name=${artifact_name}" >> $GITHUB_OUTPUT
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ steps.artifact.outputs.name }}
+          path: "*.apk"

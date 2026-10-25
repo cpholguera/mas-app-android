@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Demos can override the icon by dropping icon.png in the demo folder.
+     The build script replaces drawable/ic_launcher_icon_fg with that PNG.
+     icon.png should be a full-bleed square (no transparency) so it covers
+     the background layer and the launcher clips it to the circle shape. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/ic_launcher_background" />
-    <foreground android:drawable="@drawable/ic_launcher_foreground" />
-    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+    <background android:drawable="@drawable/ic_launcher_background"/>
+    <foreground android:drawable="@drawable/ic_launcher_icon_fg"/>
+    <monochrome android:drawable="@drawable/ic_launcher_icon_fg"/>
 </adaptive-icon>

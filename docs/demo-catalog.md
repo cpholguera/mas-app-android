@@ -1,0 +1,11 @@
+| Demo Folder        | Package                                 | App Name                | Output APK                  | Extras                                                          |
+| ------------------ | --------------------------------------- | ----------------------- | --------------------------- | --------------------------------------------------------------- |
+| `basic-test`       | `org.owasp.mastestapp.basictest`        | `MASTestApp`            | `MASTestApp.apk`            | None                                                             |
+| `network-security` | `org.owasp.mastestapp.networksecurity`  | `Network Security Demo` | `Network Security Demo.apk` | Custom manifest (adds `networkSecurityConfig`), `network_security_config.xml` |
+| `obfuscated`       | `org.owasp.mastestapp.obfuscated`       | `Obfuscated`            | `Obfuscated.apk`            | `build.gradle.kts.build`, `proguard-rules.pro`                  |
+| `obfuscated-aggressively` | `org.owasp.mastestapp.obfuscated`       | `Obfuscated Aggressively`  | `Obfuscated Aggressively.apk` | Custom manifest (adds `android:debuggable="false"`), `build.gradle.kts.build`, `proguard-rules.pro`, `obfuscationdictionary.txt` |
+| `webview-test`     | `org.owasp.mastestapp.webviewtest`      | `WebView Demo`          | `WebView Demo.apk`          | Custom manifest (main activity → `.MainActivityWebView`), `MastgTestWebView.kt` |
+| `overlay-vuln`     | `org.owasp.mastestapp`                  | `Overlay Vuln`          | `Overlay Vuln.apk`          | None                                                             |
+| `overlay-attacker` | `org.owasp.mastestapp.attacker.overlay` | `Overlay Attacker`      | `Overlay Attacker.apk`      | Custom manifest (adds `SYSTEM_ALERT_WINDOW` permission)         |
+| `custom-package`   | `com.example.customdemo`                | `Custom Demo App`       | `Custom Demo App.apk`       | None                                                             |
+| `full-override`    | `org.owasp.mastestapp.fulloverride`     | `Full Override Demo`    | `Full Override Demo.apk`    | Custom manifest (adds cleartext traffic, extra permissions), `build.gradle.kts.libs` |
