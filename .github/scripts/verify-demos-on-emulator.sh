@@ -34,12 +34,8 @@ BUILD_SCRIPT="$APP_ROOT/.github/scripts/build-apk.sh"
 command -v adb >/dev/null 2>&1 || die "adb not found in PATH"
 
 if [[ -z "$SERIAL" ]]; then
-  DEVICES=()
-  while IFS= read -r device; do
-    DEVICES+=("$device")
-  done < <(adb devices | awk 'NR>1 && $2=="device" {print $1}')
-  [[ ${#DEVICES[@]} -gt 0 ]] || die "No adb devices in 'device' state"
-  SERIAL="${DEVICES[0]}"
+  SERIAL=$(adb devices | awk 'NR>1 && $2=="device" {print $1; exit}')
+  [[ -n "$SERIAL" ]] || die "No adb devices in 'device' state"
 fi
 
 ADB=(adb -s "$SERIAL")
