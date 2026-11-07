@@ -29,31 +29,30 @@ jobs:
       - name: Generate matrix
         id: set-matrix
         run: |
+          demos=""
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            changed_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD -- 'tests/demos/')
+            changed_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD)
 
             echo "Changed files:"
             echo "$changed_files"
 
-            # Extract unique demo directories (one level under tests/demos/)
-            demos=$(echo "$changed_files" | grep -oE 'tests/demos/[^/]+' | sort -u | tr '\n' ' ')
-
-            if [ -z "$demos" ]; then
-              echo "matrix={\"demo\":[]}" >> $GITHUB_OUTPUT
+            # Build tooling changes affect every demo, so rebuild them all
+            if echo "$changed_files" | grep -qE '^\.github/(scripts/build-apk\.sh|workflows/build-demos\.yml)$'; then
+              demos=$(find tests/demos -mindepth 1 -maxdepth 1 -type d | sort | tr '\n' ' ')
             else
-              json_array=$(echo "$demos" | xargs -n1 | sed 's/.*/"&"/' | paste -sd, -)
-              echo "matrix={\"demo\":[$json_array]}" >> $GITHUB_OUTPUT
+              # Extract unique demo directories (one level under tests/demos/)
+              demos=$(echo "$changed_files" | grep -oE '^tests/demos/[^/]+' | sort -u | tr '\n' ' ' || true)
             fi
           else
             # Include all demos for main branch and workflow_dispatch
             demos=$(find tests/demos -mindepth 1 -maxdepth 1 -type d | sort | tr '\n' ' ')
+          fi
 
-            if [ -z "$demos" ]; then
-              echo "matrix={\"demo\":[]}" >> $GITHUB_OUTPUT
-            else
-              json_array=$(echo "$demos" | xargs -n1 | sed 's/.*/"&"/' | paste -sd, -)
-              echo "matrix={\"demo\":[$json_array]}" >> $GITHUB_OUTPUT
-            fi
+          if [ -z "$demos" ]; then
+            echo "matrix={\"demo\":[]}" >> $GITHUB_OUTPUT
+          else
+            json_array=$(echo "$demos" | xargs -n1 | sed 's/.*/"&"/' | paste -sd, -)
+            echo "matrix={\"demo\":[$json_array]}" >> $GITHUB_OUTPUT
           fi
 
       - name: Print matrix
