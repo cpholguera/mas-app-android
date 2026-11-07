@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Default icon foreground for the base app. The 18dp inset keeps the OWASP
+     vector within the adaptive-icon safe zone.
+     Demos replace this file with icon.png — a full-bleed square PNG that
+     covers the background layer entirely, so no inset is needed. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:top="18dp" android:bottom="18dp"
+          android:left="18dp" android:right="18dp"
+          android:drawable="@drawable/ic_launcher_foreground"/>
+</layer-list>
