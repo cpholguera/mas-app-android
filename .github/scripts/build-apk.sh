@@ -22,6 +22,7 @@ Supported demo files:
   MainActivity.kt
   MastgTestWebView.kt
   AndroidManifest.xml
+  accessibility_service.xml
   filepaths.xml
   network_security_config.xml
   backup_rules.xml
@@ -160,11 +161,12 @@ overlay() {
   info "Overlayed $(basename "$1")"
 }
 
-overlay "$DEMO_DIR/MastgTest.kt"               "$W_JAVA/MastgTest.kt"
-overlay "$DEMO_DIR/MainActivity.kt"             "$W_JAVA/MainActivity.kt"
-overlay "$DEMO_DIR/MastgTestWebView.kt"         "$W_JAVA/MastgTestWebView.kt"
+overlay "$DEMO_DIR/MastgTest.kt"                 "$W_JAVA/MastgTest.kt"
+overlay "$DEMO_DIR/MainActivity.kt"              "$W_JAVA/MainActivity.kt"
+overlay "$DEMO_DIR/MastgTestWebView.kt"          "$W_JAVA/MastgTestWebView.kt"
 overlay "$DEMO_DIR/AndroidManifest.xml"          "$W_MANIFEST"
 overlay "$DEMO_DIR/filepaths.xml"                "$W_XML/filepaths.xml"
+overlay "$DEMO_DIR/accessibility_service.xml"    "$W_XML/accessibility_service.xml"
 overlay "$DEMO_DIR/network_security_config.xml"  "$W_XML/network_security_config.xml"
 overlay "$DEMO_DIR/backup_rules.xml"             "$W_XML/backup_rules.xml"
 overlay "$DEMO_DIR/data_extraction_rules.xml"    "$W_XML/data_extraction_rules.xml"
