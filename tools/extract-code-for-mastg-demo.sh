@@ -4,7 +4,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 pushd "$REPO_ROOT" > /dev/null || exit
 
-CLASS_NAMES=("org.owasp.mastestapp.MastgTest" "org.owasp.mastestapp.MastgTestWebView" "org.owasp.mastestapp.MainActivityKt")
+# ComposableSingletons$MainActivityKt contains the non-capturing lambdas of the composables in MainActivity.kt
+CLASS_NAMES=("org.owasp.mastestapp.MastgTest" "org.owasp.mastestapp.MastgTestWebView" "org.owasp.mastestapp.MainActivityKt" "org.owasp.mastestapp.ComposableSingletons\$MainActivityKt")
 OUTPUT_DIR="output"
 TEMP_APKTOOL_DIR="$OUTPUT_DIR/temp_apktool_output"
 TEMP_APK="$OUTPUT_DIR/temp_base.apk"
@@ -50,12 +51,17 @@ for CLASS_NAME in "${CLASS_NAMES[@]}"; do
         echo "File $JAVA_FILE not found!"
     fi
 
-    # We must rename the MainActivityKt to MainActivity because the class is named MainActivityKt in the decompiled code
-    if [ "$SIMPLE_CLASS_NAME" == "MainActivityKt" ]; then
-        SIMPLE_CLASS_NAME="MainActivity"
+    # Map the decompiled class to its Kotlin source file:
+    # MainActivityKt and ComposableSingletons$MainActivityKt both come from MainActivity.kt
+    SOURCE_NAME="$SIMPLE_CLASS_NAME"
+    if [ "$SIMPLE_CLASS_NAME" == "MainActivityKt" ] || [ "$SIMPLE_CLASS_NAME" == 'ComposableSingletons$MainActivityKt' ]; then
+        SOURCE_NAME="MainActivity"
     fi
 
-    cp app/src/main/java/org/owasp/mastestapp/${SIMPLE_CLASS_NAME}.kt "$OUTPUT_DIR/${SIMPLE_CLASS_NAME}.kt"
+    SOURCE_FILE="app/src/main/java/org/owasp/mastestapp/${SOURCE_NAME}.kt"
+    if [ -f "$SOURCE_FILE" ]; then
+        cp "$SOURCE_FILE" "$OUTPUT_DIR/${SOURCE_NAME}.kt"
+    fi
 
 done
 
